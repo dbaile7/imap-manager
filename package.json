@@ -1,0 +1,25 @@
+{
+  "name": "imap-manager",
+  "version": "0.0.1",
+  "description": "Provides abstraction on some of the more difficult imap server functions.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dbaile7/imap-manager.git"
+  },
+  "keywords": [
+    "node-imap",
+    "imap",
+    "mail",
+    "email"
+  ],
+  "author": "Daniel Bailey <dan@devconnect.ca> (https://devconnect.ca)",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dbaile7/imap-manager/issues"
+  },
+  "homepage": "https://github.com/dbaile7/imap-manager#readme"
+}
