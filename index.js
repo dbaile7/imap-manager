@@ -3,7 +3,30 @@
 var mime = require('mime-lib');
 var Imap = require('imap');
 var inspect = require('util').inspect;
-var config = require('./config/mailserver');
+
+// Our default configuration
+var config = {
+    port: 993,
+    tls: true
+}
+
+// Expose mail functions
+module.exports = function(userconfig) {
+
+    // Add user config to overwrite config
+    for (var property in userconfig) {
+        if (userconfig.hasOwnProperty(property)) {
+            config[property] = userconfig[property];
+        }
+    }
+
+    // Expose our functions
+    return {
+        getEmails: getEmails,
+        getFolders: getFolders
+    };
+};
+
 
 function createImap(email, password) {
     return new Imap({
@@ -282,10 +305,4 @@ function getFolders(email, password, callback) {
 
     // Start the request
     imap.connect();
-}
-
-// Expose mail functions
-module.exports = {
-    getEmails: getEmails,
-    getFolders: getFolders
 }
