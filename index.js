@@ -67,6 +67,13 @@ function decodeContent(content, encoding, charset) {
     return content;
 }
 
+/**
+ * Returns an array of all emails in the specified folder
+ * @param {string} email - The email address of the user to authenticate
+ * @param {string} password - The password for the email address provided
+ * @param {folder} folder - The name of the folder you wish to load emails from
+ * @param {function} callback - A callback to use when a result is ready (format: function(err, emails))
+ */
 function getEmails(email, password, folder, callback) {
     var imap = createImap(email, password);
     
@@ -283,6 +290,12 @@ function getEmails(email, password, folder, callback) {
     imap.connect();
 }
 
+/**
+ * Returns an object containing a property for each folder
+ * @param {string} email - The email address of the user to authenticate
+ * @param {string} password - The password for the email address provided
+ * @param {function} callback - A callback to use when a result is ready (format: function(err, folders))
+ */
 function getFolders(email, password, callback) {
     var imap = createImap(email, password);
 
