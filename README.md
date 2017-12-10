@@ -21,19 +21,28 @@ var mailserver = require('imap-manager')(config);
 Now we can start managing our imap server!
 
 ### Examples
+Here are two examples. The callback and promise versions of them are provided - depending on how your asynchronous coding style is you may use either.
 (These examples assume you have done the above setup)
 
 #### Get all Folders
 To get a list of all folders for an imap account perform the following steps:
 
 ```js
+// getFolders using a callback
 mailserver.getFolders('email@example.com', 'pa$$word1', function(err, result) {
     if (err) {
         console.log('The following error occurred: ' + err);
     }
     else {
-        console.log('Folders: ' + result);
+        console.log('Folders: ' + JSON.stringify(result));
     }
+});
+
+// getFolders using a promise
+mailserver.getFolders('email@example.com', 'pa$$word1').then(result => {
+    console.log('Folders: ' + JSON.stringify(result);
+}).catch(error => {
+    console.log('The following error occurred: ' + err);
 });
 
 // Result
@@ -49,13 +58,21 @@ mailserver.getFolders('email@example.com', 'pa$$word1', function(err, result) {
 To list off all of the emails in a specific folder, you can use *getEmails*:
 
 ```js
+// getEmails using a callback
 mailserver.getEmails('email@example.com', 'pa$$word1', 'Inbox', function(err, result) {
-	if (err) {
-		console.log('The following error occurred: ' + err);
-	}
-	else {
-		console.log('Emails: ' + result);
-	}
+    if (err) {
+        console.log('The following error occurred: ' + err);
+    }
+    else {
+        console.log('Emails: ' + JSON.stringify(result));
+    }
+});
+
+// getEmails using a promise
+mailserver.getEmails('email@example.com', 'pa$$word1', 'Inbox').then(result => {
+    console.log('Emails: ' + JSON.stringify(result));
+}).catch(error => {
+    console.log('The following error occurred: ' + err);
 });
 
 // Result
