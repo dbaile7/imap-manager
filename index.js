@@ -40,16 +40,19 @@ function createImap(email, password) {
     });
 }
 
-function decodeContent(content, encoding, charset) {
+function decodeContent(content, struct) {
+    // Decoding vars
+    var encoding = struct.encoding ? struct.encoding : null;
+    var charset = struct.params && struct.params.charset ? struct.params.charset : null;
+
     // Ensure content is a string
     if (!(typeof content === 'string' || content instanceof String)) {
         console.log('decodeContent(' + encoding + ') failed. Content is wrong type: ' + typeof content);
         return '';
     }
 
-    // Verify that a valid string is sent in for encoding
-    if (encoding === null || encoding === undefined) {
-        console.log('decodeContent() failed. No encoding specified');
+    // Certain content should not be decoded (Images for example)
+    if (struct.type === 'image') {
         return content;
     }
 
@@ -78,105 +81,138 @@ function parseContent(rawData, attributes) {
         attributes.struct = [];
     }
     
+    // Prepare to parse the entirity of the email
+    prepareParse(attributes.struct, rawData, content);
+
+    // Return the constructed content object
+    return content;
+}
+
+/*
+    Determines if a struct contains multiple parts/subparts and
+    decodes it accordingly.
+*/
+function prepareParse(struct, data, content) {
     // Is this a multipart message?
-    if (attributes.struct.length === 1) {
+    if (struct.length === 1) {
+        // Variables for decoding need to be defined
+        if (!struct.params) {
+            struct.params = {};
+        }
+
         // Not multipart
-        var struct = attributes.struct[0];
-        var data = decodeContent(rawData, struct.encoding, struct.params.charset);
+        var decodedData = decodeContent(data, struct);
 
         if (!content[struct.type]) {
             content[struct.type] = {};
         }
-        content[struct.type][struct.subtype] = data;
+        content[struct.type][struct.subtype] = decodedData;
     }
     // Multipart
-    else if (attributes.struct.length > 1 ) {
-        // Need an array to store each part
-        var parts = [];
+    else if (struct.length > 1 ) {
 
-        // Handle each part
-        for (var index = 0; index < attributes.struct.length; index++) {
-            var attribute = attributes.struct[index];
+        // Start the semi-recursive parse
+        parsePartial(struct, data, content);
+    }
+}
 
-            // First part should be an object storing the multipart details
-            if (!Array.isArray(attribute)) {
-                // This attribute holds our boundary delimiter
-                var boundary = '--' + attribute.params.boundary;
+/*
+    Takes a struct containing attributes about the content to parse
+    and parses the input data accordingly. It is then outputted to
+    the content map.
+*/
+function parsePartial(struct, data, content) {
+    // Need an array to store each part
+    var parts = [];
 
-                // We have a boundary, first split on each line
-                var lines = rawData.split('\r\n');
-                
-                // Part string to build each individual part
-                var part = '';
+    // Handle each part
+    for (var index = 0; index < struct.length; index++) {
+        var attribute = struct[index];
 
-                // Are we reading part header info?
-                var headerInfo = true;
+        // First part should be an object storing the multipart details
+        if (!Array.isArray(attribute)) {
+            // This attribute holds our boundary delimiter
+            var boundary = '--' + attribute.params.boundary;
 
-                // Go through the lines and build our part contents
-                for (var lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-                    var line = lines[lineIndex];
-                    // If this line contains our boundary, start a new part
-                    if (line.indexOf(boundary) !== -1) {
-                        // If part already exists, we have built one
-                        if (part != '') {
-                            parts.push(part);
-                            part = '';
-                        }
+            // We have a boundary, first split on each line
+            var lines = data.split('\r\n');
+            
+            // Part string to build each individual part
+            var part = '';
 
-                        // Now reading part header info
-                        headerInfo = true;
+            // Are we reading part header info?
+            var headerInfo = true;
+
+            // Go through the lines and build our part contents
+            for (var lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+                var line = lines[lineIndex];
+                // If this line contains our boundary, start a new part
+                if (line.indexOf(boundary) !== -1) {
+                    // If part already exists, we have built one
+                    if (part != '') {
+                        parts.push(part);
+                        part = '';
                     }
-                    // Otherwise we check if this line contains header information
-                    else if (headerInfo) {
-                        // We don't care about the headers, just when they are done
-                        if (line === '') {
-                            headerInfo = false;
-                        }
-                    }
-                    else {
-                        // Not the first section for this part, add line endings
-                        if (part.length > 0) {
-                            part += '\r\n';
-                        }
-                        
-                        // Add the next part to the string
-                        part += line;
+
+                    // Now reading part header info
+                    headerInfo = true;
+                }
+                // Otherwise we check if this line contains header information
+                else if (headerInfo) {
+                    // We don't care about the headers, just when they are done
+                    if (line === '') {
+                        headerInfo = false;
                     }
                 }
+                else {
+                    // Not the first section for this part, add line endings
+                    if (part.length > 0) {
+                        part += '\r\n';
+                    }
+                    
+                    // Add the next part to the string
+                    part += line;
+                }
             }
-            // Subsequent parts will be arrays containing each part
-            else {
-                var currentPart = parts[index - 1];
-                if (currentPart != null && currentPart != undefined) {
+        }
+        // Subsequent parts will be arrays containing each part
+        else {
+            var currentPart = parts[index - 1];
+            if (currentPart != null && currentPart != undefined) {
 
+                // If there are multiple sub-structs, we see if another partial-parse is requried
+                if (attribute.length > 1 && !Array.isArray(attribute[0])) {
+                    parsePartial(attribute, currentPart, content);
+                }
+                // Just parse this array as-is, no more partials
+                else {
                     for (var subindex = 0; subindex < attribute.length; subindex++) {
-                        var struct = attribute[subindex];
-                        
-                        // Decode using known decoding mechanisms
-                        if (struct.partID) {
-                            currentPart = decodeContent(currentPart, struct.encoding, struct.params.charset);
-                        }
+                        var substruct = attribute[subindex];
+    
+                        // Verify we have the necessary details to store the content
+                        if (substruct.type && substruct.subtype) {
 
-                        // Verify content major type is initialized
-                        if (!content[struct.type]) {
-                            content[struct.type] = {};
-                        }
+                            // Decode the content
+                            var decodedData = decodeContent(currentPart, substruct);
 
-                        // Verify content subtype is initialized
-                        if (!content[struct.type][struct.subtype]) {
-                            content[struct.type][struct.subtype] = '';
-                        }
+                            // Verify content major type is initialized
+                            if (!content[substruct.type]) {
+                                content[substruct.type] = {};
+                            }
 
-                        // Store in output
-                        content[struct.type][struct.subtype] += currentPart;
+                            // Verify content subtype is initialized (Since we use string appending)
+                            if (!content[substruct.type][substruct.subtype]) {
+                                content[substruct.type][substruct.subtype] = '';
+                            }
+
+                            // Append the decoded part
+                            content[substruct.type][substruct.subtype] += decodedData;
+                        }
                     }
                 }
             }
         }
     }
-
-    // Return the constructed content object
-    return content;
 }
 
 /**
