@@ -73,7 +73,8 @@ function decodeContent(content, struct) {
 function parseContent(rawData, attributes) {
     // Format our content object
     var content = {
-        raw: rawData
+        raw: rawData,
+        attachments: []
     };
 
     // Ensure attribute struct is set
@@ -95,24 +96,54 @@ function parseContent(rawData, attributes) {
 function prepareParse(struct, data, content) {
     // Is this a multipart message?
     if (struct.length === 1) {
-        // Variables for decoding need to be defined
-        if (!struct.params) {
-            struct.params = {};
-        }
 
         // Not multipart
-        var decodedData = decodeContent(data, struct);
-
-        if (!content[struct.type]) {
-            content[struct.type] = {};
-        }
-        content[struct.type][struct.subtype] = decodedData;
+        storeContent(data, struct, content);
     }
     // Multipart
     else if (struct.length > 1 ) {
 
         // Start the semi-recursive parse
         parsePartial(struct, data, content);
+    }
+}
+
+/*
+    Stores content in the output object
+*/
+function storeContent(data, struct, content) {
+            
+    var decodedData = decodeContent(data, struct);
+
+    // Text content is stored directly into the content object
+    if (struct.type === 'text') {
+
+        // Initialize this type/subtype
+        if (!content[struct.type]) {
+            content[struct.type] = {};
+        }
+        if (!content[struct.type][struct.subtype]) {
+            content[struct.type][struct.subtype] = '';
+        }
+
+        content[struct.type][struct.subtype] += decodedData;
+    }
+    // All other content is stored in attachments
+    else {
+
+        // Want a deep copy of this struct (as-is)
+        var attachment = JSON.parse(JSON.stringify(struct));
+        attachment.data = decodeContent(data, struct);
+
+        // Some attachment ids are wrapped in angle brackets
+        if (attachment.id) {
+            if (attachment.id[0] ==='<' && attachment.id[attachment.id.length - 1] === '>') {
+                attachment.id = attachment.id.substr(1, attachment.id.length - 2);
+            }
+        }
+
+        // Store in our attachments list
+        content.attachments.push(attachment);
     }
 }
 
@@ -192,21 +223,8 @@ function parsePartial(struct, data, content) {
                         // Verify we have the necessary details to store the content
                         if (substruct.type && substruct.subtype) {
 
-                            // Decode the content
-                            var decodedData = decodeContent(currentPart, substruct);
-
-                            // Verify content major type is initialized
-                            if (!content[substruct.type]) {
-                                content[substruct.type] = {};
-                            }
-
-                            // Verify content subtype is initialized (Since we use string appending)
-                            if (!content[substruct.type][substruct.subtype]) {
-                                content[substruct.type][substruct.subtype] = '';
-                            }
-
-                            // Append the decoded part
-                            content[substruct.type][substruct.subtype] += decodedData;
+                            // Store it
+                            storeContent(currentPart, substruct, content);
                         }
                     }
                 }
