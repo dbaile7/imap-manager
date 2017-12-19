@@ -91,7 +91,17 @@ mailserver.getEmails('email@example.com', 'pa$$word1', 'Inbox').then(result => {
             text: {
                 plain: 'Example email content',
                 html: '<strong>Example</strong> email content'
-            }
+            },
+            attachments: [
+                {
+                    partID: '2',
+                    type: 'image',
+                    subtype: 'png',
+                    encoding: 'base64',
+                    data: 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACx%0Ajwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAHKSURBVDhPpZO/axNhHIefa/ODXLxe2rRNYmLP%0AHFYoZFAQdHQRB0tdXDo6WBeLqODgJtKlIoUO/RNcVIogig7qIIolQYSKBNO0RIXYltJG0ySXH69v%0AvDM1tIKYB15uuOf7ed/P8Z4iJHRAl/P8bzoO2LPCs0cPSS285dSZMVY+pUm/T1JpKIyfn2AkkXAs%0Am10BqVSS21cu4PH5CPVqbFQUtjY3OTDQw7e6n7sP5h3TZleFm5MTnDxxhENxA78epPijgCW3UPfJ%0AgMwiy0sZx7RpC5ibucPxhEmwN0C90aBP7WLbqiKqFRY+ZKh1e5ieuuXYNm0VTh8dZiAUQvOrJNMr%0AhPt0wgFZ43sRq1bD5fLy6vUbvhQqeL2eXzOtE2SzWfJr6xRKFp/zq3KtcXAwQL+u4nZ1E9Q13qWX%0AMOLx1nCTVoBpmoyeG8cql/BJ4dhhg4+5VbL5DdxutxQFsaDG6NhZZ8KmrcLLF8+ZvTGJR5PfoN6g%0AKo/9dX0LRVEoli0U6Sxmlm35N82AP7l+7aoI9/jEyFBExAb7hRmLCHN/SER0VeRyOcfaYc+L1OTp%0Ak8fM379HubTNkGFw8dJlotGo83aHvwb8Kx3/Cx0GwE9hjclg65ielwAAAABJRU5ErkJggg==',
+                    ...
+                }
+            ]
         },
         header: {
             date: ['Sat, 02 Dec 2017 22:40:56 -0500'],
