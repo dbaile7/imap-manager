@@ -98,7 +98,7 @@ function prepareParse(struct, data, content) {
     if (struct.length === 1) {
 
         // Not multipart
-        storeContent(data, struct, content);
+        storeContent(data, struct[0], content);
     }
     // Multipart
     else if (struct.length > 1 ) {
