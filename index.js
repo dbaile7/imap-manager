@@ -51,8 +51,8 @@ function decodeContent(content, struct) {
         return '';
     }
 
-    // Certain content should not be decoded (Images for example)
-    if (struct.type === 'image') {
+    // Only text-types are decoded before returning to the client
+    if (struct.type !== 'text') {
         return content;
     }
 
