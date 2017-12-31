@@ -413,7 +413,7 @@ function getFolders(email, password, callback) {
 
                         // Recursively remove children's parent references
                         if (box.children) {
-                            removeParents(box.children);
+                            _removeParents(box.children);
                         }
                     });
                 }

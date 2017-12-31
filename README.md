@@ -48,7 +48,7 @@ mailserver.getFolders('email@example.com', 'pa$$word1').then(result => {
 // Result
 {
     Archive: [Object],
-    Draftts: [Object],
+    Drafts: [Object],
     INBOX: [Object],
     ...
 }

@@ -1,6 +1,6 @@
 {
   "name": "imap-manager",
-  "version": "0.0.9",
+  "version": "0.0.91",
   "description": "Provides abstraction on some of the more difficult imap server functions.",
   "main": "index.js",
   "scripts": {
