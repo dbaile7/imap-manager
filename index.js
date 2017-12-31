@@ -398,7 +398,24 @@ function getFolders(email, password, callback) {
                     return reject(err);
                 }
                 else {
+                    // Since folders may have children (With parent references), we remove the parent references (Circular dependencies)
+                    _removeParents(result);
+
+                    // Now we return the result
                     return resolve(result);
+                }
+
+                // Helper function to remove parent references from a mailbox
+                function _removeParents(mailbox) {
+                    Object.keys(mailbox).forEach(function(key) {
+                        var box = mailbox[key];
+                        delete box.parent;
+
+                        // Recursively remove children's parent references
+                        if (box.children) {
+                            removeParents(box.children);
+                        }
+                    });
                 }
             });
         });
