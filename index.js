@@ -364,11 +364,17 @@ function getEmails(email, password, folder, callback) {
         imap.once('error', function(err) {
             console.log('getFolders(' + email + ', ' + password + ') failed. ' + err);
             
+            var message = 'An unspecified error has occurred';
+
             if (err.source === 'timeout') {
-                callback('Timed out while connecting to the server');
+                message = 'Timed out while connecting to the server';
+            }
+
+            if (callback) {
+                callback(message);
             }
             else {
-                callback('An unspecified error has occurred');
+                return reject(message);
             }
         });
 
