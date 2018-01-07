@@ -248,6 +248,9 @@ function getEmails(email, password, folder, callback) {
         imap.once('ready', function() {
             imap.openBox(folder, true, function(err, box) {
                 if (err) {
+                    // Done with this request
+                    imap.end();
+
                     var message = 'Failed to open the folder';
                     if (callback) {
                         return callback(message);
@@ -339,6 +342,7 @@ function getEmails(email, password, folder, callback) {
                                 }
                             });
                             fetch.once('end', function() {
+                                // Done with this request
                                 imap.end();
 
                                 // Return messages as an array
@@ -362,7 +366,7 @@ function getEmails(email, password, folder, callback) {
 
         // Handle errors
         imap.once('error', function(err) {
-            console.log('getFolders(' + email + ', ' + password + ') failed. ' + err);
+            console.log('getEmails(' + email + ', ' + password + ', ' + folder + ') failed. ' + err);
             
             var message = 'An unspecified error has occurred';
 
@@ -397,6 +401,9 @@ function getFolders(email, password, callback) {
         // When ready, load the list of folders and return it in the callback
         imap.once('ready', function() {
             imap.getBoxes(function(err, result) {
+                // Done with this request - close connection
+                imap.end();
+
                 if (callback) {
                     return callback(err, result);
                 }
@@ -428,6 +435,7 @@ function getFolders(email, password, callback) {
 
         // Handle errors
         imap.once('error', function(err) {
+            console.log('getFolders(' + email + ', ' + password + ') failed. ' + err);
 
             // Format an error message
             var message = 'An unspecified error has occurred';
