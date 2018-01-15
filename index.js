@@ -489,7 +489,7 @@ function setFlags(email, password, folder, uid, flags, callback) {
 
 		// When ready, load the list of emails and return it
 		imap.once('ready', function() {
-			imap.openBox(folder, true, function(err, box) {
+			imap.openBox(folder, false, function(err, box) {
 				if (err) {
 					// Done with this request
 					imap.end();
@@ -507,7 +507,7 @@ function setFlags(email, password, folder, uid, flags, callback) {
 					var flagArray = [];
 					Object.keys(flags).forEach(flag => {
 						if (flags[flag]) {
-							flagArray.push(flag);
+							flagArray.push('\\' + flag);
 						}
 					});
 
@@ -550,7 +550,7 @@ function setFlags(email, password, folder, uid, flags, callback) {
 
 		// Handle errors
 		imap.once('error', function(err) {
-			console.log('setFlags(' + email + ', ' + password + ', ' + folder + ', ' + uid + ', ' + flags + ') failed. ' + err);
+			console.log('setFlags(' + email + ', ' + password + ', ' + folder + ', ' + uid + ', ' + JSON.stringify(flags) + ') failed. ' + err);
 
 			// Done with this request
 			imap.end();
