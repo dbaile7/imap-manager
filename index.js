@@ -27,7 +27,10 @@ module.exports = function(userconfig) {
 		getFolders: getFolders,
 
 		// SETTERS
-		setFlags: setFlags
+		setFlags: setFlags,
+
+		// OPERATIONS
+		moveEmail: moveEmail
 	};
 };
 
@@ -474,13 +477,73 @@ function getFolders(email, password, callback) {
 }
 
 /**
+ * Moves an email from a parent folder to a target folder
+ * @param {string} email - The email address of the user to authenticate
+ * @param {string} password - The password for the email address provided
+ * @param {folder} parent - The unique id of the folder to move the email from
+ * @param {folder} target - The unique id of the folder to move the email to
+ * @param {uid} uid - The email's unique identifier
+ * @param {function} callback - An optional callback to use when a result is ready (format: function(err))
+ */
+function moveEmail(email, password, parent, target, uid, callback) {
+	return new Promise((resolve, reject) => {
+		var imap = createImap(email, password);
+
+		// When ready, move the email
+		imap.once('ready', function() {
+			imap.openBox(parent, false, function(err, box) {
+				if (err) {
+					// Done with this request
+					imap.end();
+
+					var message = 'Failed to open the folder';
+					if (callback) {
+						return callback(message);
+					}
+					else {
+						return reject(message);
+					}
+				}
+				else {
+					imap.move(uid, target, function(err) {
+						// Done with this request
+						imap.end();
+
+						if (err) {
+							var message = 'Failed to move email';
+							if (callback) {
+								return callback(message);
+							}
+							else {
+								return reject(message);
+							}
+						}
+						else {
+							if (callback) {
+								return callback();
+							}
+							else {
+								return resolve();
+							}
+						}
+					});
+				}
+			});
+		});
+
+		// Start the request
+		imap.connect();
+	});
+}
+
+/**
  * Sets the flags on an email in a given folder with the given id
  * @param {string} email - The email address of the user to authenticate
  * @param {string} password - The password for the email address provided
- * @param {folder} folder - The unique name of the folder containing the email
+ * @param {folder} folder - The unique id of the folder containing the email
  * @param {uid} uid - The email's unique identifier
  * @param {flags} flags - A map of flags to booleans (No '/') to set on the email
- * @param {function} callback - An optional callback to use when a result is ready (format: function(err, folders))
+ * @param {function} callback - An optional callback to use when a result is ready (format: function(err))
  */
 function setFlags(email, password, folder, uid, flags, callback) {
 	return new Promise((resolve, reject) => {
