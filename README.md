@@ -113,3 +113,53 @@ mailserver.getEmails('email@example.com', 'pa$$word1', 'Inbox').then(result => {
     ...
 ]
 ```
+
+#### Move an Email
+To move an email from a parent folder to target folder, you can use the command: 'moveEmail'
+
+```
+// moveEmail using a callback
+mailserver.moveEmail('email@example.com', 'pa$$word1', 'Inbox', 'Archive', 41, function(err) {
+    if (err) {
+        console.log('The following error occurred: ' + err);
+    }
+    else {
+        console.log('Moved email with uid 41 from folder Inbox to folder Archive');
+    }
+});
+
+// moveEmail using a promise
+mailserver.moveEmail('email@example.com', 'pa$$word1', 'Inbox', 'Archive', 41).then(result => {
+    console.log('Moved email with uid 41 from folder Inbox to folder Archive');
+}).catch(err => {
+    console.log('The following error occurred: ' + err);
+});
+```
+
+#### Update an Email's Flags
+To set the flags on an email, you can use the command: 'setFlags'
+
+```
+// For the following examples please assume we have access to a map called 'flags' that is defined as follows:
+var flags = {
+    Seen: true,
+    Flagged: true
+};
+
+// setFlags using a callback
+mailserver.setFlags('email@example.com', 'pa$$word1', 'Inbox', 41, flags, function(err) {
+    if (err) {
+        console.log('The following error occurred: ' + err);
+    }
+    else {
+        console.log('Successfully updated flags for email with uid 41!');
+    }
+});
+
+// setFlags using a promise
+mailserver.setFlags('email@example.com', 'pa$$word1', 'Inbox', 41, flags).then(result => {
+    console.log('Successfully updated flags for email with uid 41!');
+}).catch(err => {
+    console.log('The following error occurred: ' + err);
+});
+```
