@@ -140,14 +140,14 @@ mailserver.moveEmail('email@example.com', 'pa$$word1', 'Inbox', 'Archive', 41).t
 To set the flags on an email, you can use the command: 'setFlags'
 
 ```
-// For the following examples please assume we have access to a map called 'flags' that is defined as follows:
-var flags = {
-    Seen: true,
-    Flagged: true
-};
+// For the following examples please assume we have access to an array called 'flags' that is defined as follows:
+var flags = [
+    'Seen',
+    'Flagged'
+];
 
-// setFlags using a callback
-mailserver.setFlags('email@example.com', 'pa$$word1', 'Inbox', 41, flags, function(err) {
+// setFlags using a callback (Adding the flags)
+mailserver.setFlags('email@example.com', 'pa$$word1', 'Inbox', 41, true, flags, function(err) {
     if (err) {
         console.log('The following error occurred: ' + err);
     }
@@ -156,8 +156,8 @@ mailserver.setFlags('email@example.com', 'pa$$word1', 'Inbox', 41, flags, functi
     }
 });
 
-// setFlags using a promise
-mailserver.setFlags('email@example.com', 'pa$$word1', 'Inbox', 41, flags).then(result => {
+// setFlags using a promise (Removing the flags)
+mailserver.setFlags('email@example.com', 'pa$$word1', 'Inbox', 41, false, flags).then(result => {
     console.log('Successfully updated flags for email with uid 41!');
 }).catch(err => {
     console.log('The following error occurred: ' + err);

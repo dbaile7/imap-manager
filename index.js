@@ -8,7 +8,7 @@ var inspect = require('util').inspect;
 var config = {
 	port: 993,
 	tls: true
-}
+};
 
 // Expose mail functions
 module.exports = function(userconfig) {
@@ -537,15 +537,17 @@ function moveEmail(email, password, parent, target, uid, callback) {
 }
 
 /**
- * Sets the flags on an email in a given folder with the given id
+ * Adds the flags to an email in a given folder with the given id
  * @param {string} email - The email address of the user to authenticate
  * @param {string} password - The password for the email address provided
  * @param {folder} folder - The unique id of the folder containing the email
  * @param {uid} uid - The email's unique identifier
- * @param {flags} flags - A map of flags to booleans (No '/') to set on the email
+ * @param {boolean} adding - Is the user adding or deleting the given flags?
+ * @param {flags} flags - An array of flag strings to add (ex: ['Seen', 'Flagged'])
  * @param {function} callback - An optional callback to use when a result is ready (format: function(err))
  */
-function setFlags(email, password, folder, uid, flags, callback) {
+function setFlags(email, password, folder, uid, adding, flags, callback) {
+
 	return new Promise((resolve, reject) => {
 
 		var imap = createImap(email, password);
@@ -566,38 +568,21 @@ function setFlags(email, password, folder, uid, flags, callback) {
 					}
 				}
 				else {
-					// Format the flags array
-					var flagArray = [];
-					Object.keys(flags).forEach(flag => {
-						if (flags[flag]) {
-							flagArray.push('\\' + flag);
-						}
-					});
-
-					if (flagArray.length) {
-						// Set the flags
-						imap.setFlags(uid, flagArray, function(err) {
-							// Done with this request
-							imap.end();
-
-							if (err) {
-								var message = 'Failed to update email flags';
-								if (callback) {
-									return callback(message);
-								}
-								else {
-									return reject(message);
-								}
-							}
-							else {
-								if (callback) {
-									return callback();
-								}
-								else {
-									return resolve();
-								}
-							}
+					if (flags.length) {
+						flags.forEach(flag => {
+							flag = '\\' + flag;
 						});
+
+						// Add the flags?
+						if (adding === true) {
+							imap.addFlags(uid, flags, handleFlags);
+						}
+						else if (adding === false) {
+							imap.delFlags(uid, flags, handleFlags);
+						}
+						else {
+							console.log('Cannot set flags, argument "adding" must be a Boolean');
+						}
 					}
 					else {
 						if (callback) {
@@ -610,6 +595,30 @@ function setFlags(email, password, folder, uid, flags, callback) {
 				}
 			});
 		});
+
+		// Handle result
+		function handleFlags(err) {
+			// Done with this request
+			imap.end();
+
+			if (err) {
+				var message = 'Failed to update email flags';
+				if (callback) {
+					return callback(message);
+				}
+				else {
+					return reject(message);
+				}
+			}
+			else {
+				if (callback) {
+					return callback();
+				}
+				else {
+					return resolve();
+				}
+			}
+		}
 
 		// Handle errors
 		imap.once('error', function(err) {
