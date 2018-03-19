@@ -1,6 +1,6 @@
 {
   "name": "imap-manager",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Provides abstraction on some of the more difficult imap server functions.",
   "main": "index.js",
   "scripts": {
@@ -21,5 +21,9 @@
   "bugs": {
     "url": "https://github.com/dbaile7/imap-manager/issues"
   },
-  "homepage": "https://github.com/dbaile7/imap-manager#readme"
+  "homepage": "https://github.com/dbaile7/imap-manager#readme",
+  "dependencies": {
+    "html2plaintext": "^2.0.1",
+    "nodemailer": "^4.6.3"
+  }
 }

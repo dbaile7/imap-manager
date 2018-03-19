@@ -1,5 +1,7 @@
 // app/mail.js
 
+var h2p = require('html2plaintext');
+var nodemailer = require('nodemailer');
 var mime = require('mime-lib');
 var Imap = require('imap');
 var inspect = require('util').inspect;
@@ -7,6 +9,7 @@ var inspect = require('util').inspect;
 // Our default configuration
 var config = {
 	port: 993,
+	sendPort: 587,
 	tls: true
 };
 
@@ -30,7 +33,8 @@ module.exports = function(userconfig) {
 		setFlags: setFlags,
 
 		// OPERATIONS
-		moveEmail: moveEmail
+		moveEmail: moveEmail,
+		sendEmail: sendEmail
 	};
 };
 
@@ -300,7 +304,8 @@ function getEmails(email, password, folder, callback) {
 							// We have the list of emails to fetch
 							var fetch = imap.fetch(results, {
 								bodies: ['TEXT', 'HEADER.FIELDS (FROM TO SUBJECT DATE)'],
-								struct: true
+								struct: true,
+								body: true
 							});
 							fetch.on('message', function(msg, seqno) {
 								var headerBuffer = '';
@@ -533,6 +538,64 @@ function moveEmail(email, password, parent, target, uid, callback) {
 
 		// Start the request
 		imap.connect();
+	});
+}
+
+
+/**
+ * Adds the flags to an email in a given folder with the given id
+ * @param {string} email - The email address of the user to authenticate
+ * @param {string} password - The password for the email address provided
+ * @param {[string]} to - The email addresses to receive the email
+ * @param {string} subject - The subject of the message
+ * @param {string} content - The body of the message
+ * @param {function} callback - An optional callback to use when a result is ready (format: function(err))
+ */
+function sendEmail(email, password, to, subject, content, callback) {
+	return new Promise((resolve, reject) => {
+		// Create SMTP transporter
+		var transporter = nodemailer.createTransport({
+			host: config.host,
+			port: config.sendPort,
+			secure: Boolean(config.sendPort === 465),
+			auth: {
+				user: email,
+				pass: password
+			}
+		});
+
+		// Format recipients string
+		var recipients = '';
+		to.forEach(recipient => {
+			recipients += (recipient + ',');
+		});
+		// Remove last ','
+		recipients = recipients.substr(0, recipients.length - 1);
+
+		// Set up email
+		var mailOptions = {
+			from: email,
+			to: recipients,
+			subject: subject,
+			text: h2p(content),
+			html: content
+		};
+
+		// Send mail
+		transporter.sendMail(mailOptions, (error, info) => {
+			if (error) {
+				if (callback) {
+					return callback(error);
+				}
+				else {
+					return reject(error);
+				}
+			}
+			// Success!
+			else {
+				return resolve();
+			}
+		});
 	});
 }
 
